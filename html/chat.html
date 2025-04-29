@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Realtime PocketBase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: #f1f1f1;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        form {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Chat Realtime</h1>
+    <ul id="messages"></ul>
+
+    <form id="form">
+        <input type="text" id="messageInput" placeholder="Digite sua mensagem..." autocomplete="off" required>
+        <button type="submit">Enviar</button>
+    </form>
+
+    <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+    <script>
+        const client = new PocketBase('http://192.168.1.194:8090');
+
+        const messagesList = document.getElementById('messages');
+        const form = document.getElementById('form');
+        const messageInput = document.getElementById('messageInput');
+
+        async function fetchMessages() {
+            const resultList = await client.collection('messages').getList(1, 500, { sort: '-created' });
+            messagesList.innerHTML = '';
+
+            resultList.items.forEach(record => {
+                const li = document.createElement('li');
+                li.textContent = record.text;
+                messagesList.appendChild(li);
+            });
+        }
+
+        // Escutando atualizações em tempo real
+        client.collection('messages').subscribe('*', async (e) => {
+            await fetchMessages();
+        });
+
+        // Carregar mensagens inicialmente
+        fetchMessages();
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = messageInput.value.trim();
+            if (content) {
+                await client.collection('messages').create({
+                    text: content
+                });
+                messageInput.value = '';
+            }
+        });
+    </script>
+</body>
+
+</html>
