@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
+import ChatApp from './chatApp'; // Importe o ChatApp corretamente
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(''); // Armazenar o perfil do usuário
 
   const handleSuccess = (credentialResponse) => {
-    console.log(credentialResponse);
-
-    // O response vem com o token que você pode decodificar para obter as informações do usuário
     const decodedToken = jwtDecode(credentialResponse.credential); // Decodificando o token JWT
     const profile = {
       email: decodedToken.email, // Obtendo o email diretamente do token decodificado
@@ -35,23 +33,11 @@ export default function App() {
         {!user ? (
           <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
         ) : (
-          <div>
+          <>
             <h2>Bem-vindo, {user.name}!</h2>
-            {profile === 'admin' ? (
-              <div>
-                <h3>Você é Administrador</h3>
-                {/* Funcionalidades de Administrador */}
-                <button>Gerenciar Usuários</button>
-                <button>Editar Mensagens</button>
-              </div>
-            ) : (
-              <div>
-                <h3>Você é Usuário Comum</h3>
-                {/* Funcionalidades de Usuário */}
-                <button>Ver Mensagens</button>
-              </div>
-            )}
-          </div>
+            {/* Passa o perfil (admin ou user) para o ChatApp */}
+            <ChatApp profile={profile} />
+          </>
         )}
       </div>
     </GoogleOAuthProvider>

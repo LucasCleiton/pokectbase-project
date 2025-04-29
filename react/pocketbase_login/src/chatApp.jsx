@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import PocketBase from 'pocketbase';
 import './App.css';
 
-const client = new PocketBase('http://seuip:8090');
+const client = new PocketBase('http://10.31.88.124:8090');
 client.autoCancellation(false);
 
-export default function ChatApp() {
+export default function ChatApp({ profile }) {
     const [messages, setMessages] = useState([]);
     const [text, setText] = useState('');
 
@@ -43,6 +43,15 @@ export default function ChatApp() {
         }
     }
 
+    async function handleClearChat(e) {
+        e.preventDefault();
+        const resultList = await client.collection('messages').getFullList({});
+        for (const msg of resultList) {
+            await client.collection('messages').delete(msg.id);
+        }
+        setMessages([]);
+    }
+
     return (
         <div className="chat-container">
             <h1 className="chat-title">Chat Realtime 🚀</h1>
@@ -64,6 +73,13 @@ export default function ChatApp() {
                     className="chat-input"
                 />
                 <button type="submit" className="chat-button">Enviar</button>
+
+                {/* Mostra o botão Limpar Chat apenas se for admin */}
+                {profile === 'admin' && (
+                    <button onClick={handleClearChat} className="chat-clear-button">
+                        Limpar Chat
+                    </button>
+                )}
             </form>
         </div>
     );
